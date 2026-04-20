@@ -1,8 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Text;
+using System.Diagnostics;
 
 namespace CPUFramework
 {
@@ -21,8 +19,33 @@ namespace CPUFramework
             cmd.CommandText = sqlstatement;
             var dr = cmd.ExecuteReader();
             dt.Load(dr);
+            SetAllNull(dt);
             return dt;
+        }
+
+        public static void ExecuteSQL(string sqlstatement)
+        {
+            GetDataTable(sqlstatement);
+        }
+
+        private static void SetAllNull(DataTable dt)
+        {
+            foreach (DataColumn c in dt.Columns)
+            {
+                c.AllowDBNull = true;
+            }
+        }
+
+        public static void DebugPrintDT(DataTable dt)
+        {
+            foreach (DataRow r in dt.Rows)
+            {
+                foreach (DataColumn c in dt.Columns)
+                {
+                    Debug.Print(c.ColumnName + " = " + r[c.ColumnName].ToString());
+                }
+            }
         }
     }
 }
-//note
+
