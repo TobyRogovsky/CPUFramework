@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Text;
 
 namespace CPUFramework
@@ -9,6 +10,29 @@ namespace CPUFramework
     public class SQLUtility
     {
         public static string ConnectionString = "";
+
+        public static void ExecuteSQL(string sqlstatement)
+        {
+            GetDataTable(sqlstatement);
+        }
+
+        public static int GetFirstColumnFirstRowValue(string sql)
+        {
+            int n = 0;
+
+            DataTable dt = GetDataTable(sql);
+            if (dt.Rows.Count > 0 && dt.Columns.Count > 0)
+            {
+                if (dt.Rows[0][0] != DBNull.Value) 
+                {                    
+                    int.TryParse(dt.Rows[0][0].ToString(), out n);
+                }
+                
+            } 
+
+            return n;
+        }
+
         public static DataTable GetDataTable(string sqlstatement)
         {
             DataTable dt = new DataTable();
@@ -23,6 +47,7 @@ namespace CPUFramework
             dt.Load(dr);
             return dt;
         }
+     
     }
 }
 //note
