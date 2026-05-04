@@ -47,7 +47,21 @@ namespace CPUFramework
             dt.Load(dr);
             return dt;
         }
-     
+
+        public static void SetConnectionString()
+        {
+            ConnectionString =
+                "Server=tcp:dev-tobycpu.database.windows.net,1433;" +
+                "Initial Catalog=RecipeDB;" +
+                "Persist Security Info=False;" +
+                "User ID=TobyR;" +
+                "Password=Liron@123;" +
+                "MultipleActiveResultSets=False;" +
+                "Encrypt=True;" +
+                "TrustServerCertificate=False;" +
+                "Connection Timeout=30;";
+        }
+
     }
 }
 //note
