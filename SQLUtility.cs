@@ -12,7 +12,7 @@ namespace CPUFramework
         public static SqlCommand GetSQLCommand(string sprocname)
         {
             SqlCommand cmd;
-            using (SqlConnection conn = new SqlConnection(ConnectionString)) 
+            using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
                 cmd = new SqlCommand(sprocname, conn);
                 cmd.CommandType = CommandType.StoredProcedure;
@@ -20,6 +20,11 @@ namespace CPUFramework
                 SqlCommandBuilder.DeriveParameters(cmd);
             }
             return cmd;
+        }
+
+        public static void ExecuteSQL(SqlCommand cmd)
+        {
+            DoExcecuteSQL(cmd, false);
         }
 
         public static void ExecuteSQL(string sqlstatement)
@@ -60,6 +65,15 @@ namespace CPUFramework
                     msg = msg.Substring(0, pos);
                     msg = msg.Replace("_", " ");
                     msg = msg + msgend;
+
+                    if(prefix == "f_")
+                    {
+                        var words = msg.Split(" ");
+                        if (words.Length > 1)
+                        {
+                            msg = $"Cannot delete  {words[0]} because it has a related {words[1]} record.";
+                        }
+                    }
                 }
             }
             return msg;
@@ -72,18 +86,22 @@ namespace CPUFramework
             DataTable dt = GetDataTable(sql);
             if (dt.Rows.Count > 0 && dt.Columns.Count > 0)
             {
-                if (dt.Rows[0][0] != DBNull.Value) 
-                {                    
+                if (dt.Rows[0][0] != DBNull.Value)
+                {
                     int.TryParse(dt.Rows[0][0].ToString(), out n);
                 }
-                
-            } 
+
+            }
 
             return n;
         }
-
         public static DataTable GetDT(SqlCommand cmd)
-        {            
+        {
+            return DoExcecuteSQL(cmd, true);
+        }
+
+        private static DataTable DoExcecuteSQL(SqlCommand cmd, bool loadtable)
+        {
             DataTable dt = new();
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
@@ -93,7 +111,10 @@ namespace CPUFramework
                 try
                 {
                     SqlDataReader dr = cmd.ExecuteReader();
-                    dt.Load(dr);
+                    if (loadtable == true)
+                    {
+                        dt.Load(dr);
+                    }
                 }
                 catch (SqlException ex)
                 {
@@ -101,15 +122,32 @@ namespace CPUFramework
                     throw new Exception(msg);
 
                 }
-            } 
+                catch (InvalidCastException ex)
+                {
+                    throw new Exception(cmd.CommandText + ": " + ex.Message, ex);
+                }
+            }
             SetAllColumnsAllowNull(dt);
             return dt;
         }
 
+        public static void SetParamValue(SqlCommand cmd, string paramname, object value)
+        {
+            try
+            {
+                cmd.Parameters[paramname].Value = value;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(cmd.CommandText + ": " + ex.Message, ex);
+            }    
+               
+        }
+
         public static DataTable GetDataTable(string sqlstatement)
         {
-            DataTable dt = new DataTable();
-            return GetDT(new SqlCommand(sqlstatement));
+           
+            return DoExcecuteSQL(new SqlCommand(sqlstatement), true);
         }
 
         private static void SetAllColumnsAllowNull(DataTable dt)
@@ -126,7 +164,7 @@ namespace CPUFramework
 #if DEBUG
             StringBuilder sb = new StringBuilder();
 
-            if (cmd.Connection != null) 
+            if (cmd.Connection != null)
             {
                 sb.AppendLine($"--{cmd.Connection.DataSource}");
                 sb.AppendLine($"use {cmd.Connection.Database}");
@@ -134,12 +172,12 @@ namespace CPUFramework
             }
 
             if (cmd.CommandType == CommandType.StoredProcedure)
-            { 
+            {
                 sb.AppendLine($"exec {cmd.CommandText}");
                 int paramcount = cmd.Parameters.Count - 1;
                 int paramnum = 0;
                 string comma = ",";
-                foreach (SqlParameter p in cmd.Parameters) 
+                foreach (SqlParameter p in cmd.Parameters)
                 {
                     if (p.Direction != ParameterDirection.ReturnValue)
                     {
@@ -148,11 +186,11 @@ namespace CPUFramework
                             comma = "";
                         }
                         sb.AppendLine($"{p.ParameterName} = {(p.Value == null ? "null" : p.Value.ToString())}{comma}");
-                       
+
                     }
-                    paramnum ++;
+                    paramnum++;
                 }
-                
+
             }
             else
             {
