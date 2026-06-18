@@ -219,6 +219,33 @@ namespace CPUFramework
             }
         }
 
+        public static int GetValueFromFirstRowAsInt(DataTable dt, string colname)
+        {
+            int value = 0;
+            if (dt.Rows.Count > 0)
+            {
+                DataRow r = dt.Rows[0];
+                if (r[colname]!= null && r[colname] is int)
+                {
+                    value = (int)r[colname];
+                }
+            }
+            return value;
+        }
+
+        public static string GetValueFromFirstRowAsString(DataTable dt, string colname)
+        {
+            string value = "";
+            if (dt.Rows.Count > 0)
+            {
+                DataRow r = dt.Rows[0];
+                if (r[colname] != null && r[colname] is string)
+                {
+                    value = (string)r[colname];
+                }
+            }
+            return value;
+        }
 
         public static string GetSQL(SqlCommand cmd)
         {
