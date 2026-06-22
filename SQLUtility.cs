@@ -117,8 +117,7 @@ namespace CPUFramework
                     cmd.Parameters[paramname].Value = row[col.ColumnName];
                 }
             }
-            DoExcecuteSQL(cmd, false);
-
+            DoExcecuteSQL(cmd, false);            
             foreach(SqlParameter p in cmd.Parameters)
             {
                 if (p.Direction == ParameterDirection.InputOutput)
@@ -130,6 +129,7 @@ namespace CPUFramework
                     }
                 }
             }
+            row.Table.AcceptChanges();
         }
 
         private static DataTable DoExcecuteSQL(SqlCommand cmd, bool loadtable)
@@ -251,6 +251,16 @@ namespace CPUFramework
                 }
             }
             return value;
+        }
+
+        public static bool TableChanges(DataTable dt)
+        {
+            bool b = false;
+            if(dt.GetChanges() != null)
+            {
+                b = true;
+            }
+            return b;
         }
 
         public static string GetSQL(SqlCommand cmd)
