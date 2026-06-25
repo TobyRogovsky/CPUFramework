@@ -106,7 +106,17 @@ namespace CPUFramework
             return DoExcecuteSQL(cmd, true);
         }
 
-        public static void SaveDataRow(DataRow row, string sprocname)
+        public static void SaveDataTable(DataTable dt, string sprocname)
+        {
+           var rows = dt.Select("", "", DataViewRowState.Added | DataViewRowState.ModifiedCurrent);
+            foreach(DataRow r in rows)
+            {
+                SaveDataRow(r, sprocname, false);
+            }
+            dt.AcceptChanges();
+        }
+
+        public static void SaveDataRow(DataRow row, string sprocname, bool acceptchanges = true)
         {
             SqlCommand cmd = GetSQLCommand(sprocname);
             foreach(DataColumn col in row.Table.Columns)
@@ -120,7 +130,7 @@ namespace CPUFramework
             DoExcecuteSQL(cmd, false);            
             foreach(SqlParameter p in cmd.Parameters)
             {
-                if (p.Direction == ParameterDirection.InputOutput)
+                if (p.Direction == ParameterDirection.Output)
                 {
                     string colname = p.ParameterName.Substring(1);
                     if (row.Table.Columns.Contains(colname))
@@ -129,7 +139,10 @@ namespace CPUFramework
                     }
                 }
             }
-            row.Table.AcceptChanges();
+            if (acceptchanges == true)
+            {
+                row.Table.AcceptChanges();
+            }
         }
 
         private static DataTable DoExcecuteSQL(SqlCommand cmd, bool loadtable)
@@ -147,6 +160,7 @@ namespace CPUFramework
                     if (loadtable == true)
                     {
                         dt.Load(dr);
+                        SetAllColumnProperties(dt);
                     }
                 }
                 catch (SqlException ex)
@@ -159,8 +173,7 @@ namespace CPUFramework
                 {
                     throw new Exception(cmd.CommandText + ": " + ex.Message, ex);
                 }
-            }
-            SetAllColumnsAllowNull(dt);
+            }            
             return dt;
         }
 
@@ -183,7 +196,7 @@ namespace CPUFramework
                     {
                         if (p.Value != null)
                         {
-                            msg = p.Value.ToString();
+                            msg = p.Value.ToString()!;
                         }
                     }
                 }
@@ -217,11 +230,14 @@ namespace CPUFramework
             return DoExcecuteSQL(new SqlCommand(sqlstatement), true);
         }
 
-        private static void SetAllColumnsAllowNull(DataTable dt)
+        private static void SetAllColumnProperties(DataTable dt)
         {
             foreach (DataColumn c in dt.Columns)
             {
-                c.AllowDBNull = true;
+                Debug.Print(c.ColumnName + " ReadOnly before = " + c.ReadOnly);
+                c.AllowDBNull = true;                
+                c.AutoIncrement = false;
+                Debug.Print(c.ColumnName + " ReadOnly after = " + c.ReadOnly);
             }
         }
 
