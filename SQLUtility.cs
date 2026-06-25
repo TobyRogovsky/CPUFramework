@@ -233,11 +233,9 @@ namespace CPUFramework
         private static void SetAllColumnProperties(DataTable dt)
         {
             foreach (DataColumn c in dt.Columns)
-            {
-                Debug.Print(c.ColumnName + " ReadOnly before = " + c.ReadOnly);
+            {                
                 c.AllowDBNull = true;                
-                c.AutoIncrement = false;
-                Debug.Print(c.ColumnName + " ReadOnly after = " + c.ReadOnly);
+                c.AutoIncrement = false;                
             }
         }
 
