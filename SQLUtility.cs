@@ -130,7 +130,7 @@ namespace CPUFramework
             DoExcecuteSQL(cmd, false);            
             foreach(SqlParameter p in cmd.Parameters)
             {
-                if (p.Direction == ParameterDirection.Output)
+                if (p.Direction == ParameterDirection.Output || p.Direction == ParameterDirection.InputOutput)
                 {
                     string colname = p.ParameterName.Substring(1);
                     if (row.Table.Columns.Contains(colname))
