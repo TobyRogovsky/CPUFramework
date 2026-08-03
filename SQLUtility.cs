@@ -148,35 +148,38 @@ namespace CPUFramework
         private static DataTable DoExcecuteSQL(SqlCommand cmd, bool loadtable)
         {
             DataTable dt = new();
+
             using (SqlConnection conn = new SqlConnection(ConnectionString))
             {
                 conn.Open();
                 cmd.Connection = conn;
                 Debug.Print(GetSQL(cmd));
+
                 try
                 {
-                    SqlDataReader dr = cmd.ExecuteReader();
-                    CheckReturnValue(cmd);
-                    if (loadtable == true)
+                    using SqlDataReader dr = cmd.ExecuteReader();
+
+                    if (loadtable)
                     {
                         dt.Load(dr);
                         SetAllColumnProperties(dt);
                     }
+
+                    CheckReturnValue(cmd);
                 }
                 catch (SqlException ex)
                 {
                     string msg = ParseConstraintMsg(ex.Message);
-                    throw new Exception(msg);
-
+                    throw new Exception(msg, ex);
                 }
                 catch (InvalidCastException ex)
                 {
                     throw new Exception(cmd.CommandText + ": " + ex.Message, ex);
                 }
-            }            
+            }
+
             return dt;
         }
-
         private static void CheckReturnValue(SqlCommand cmd)
         {
             int returnvalue = 0;
@@ -241,36 +244,30 @@ namespace CPUFramework
 
         public static int GetValueFromFirstRowAsInt(DataTable dt, string colname)
         {
-            int value = 0;
-            if (dt.Rows.Count > 0)
+            if (dt.Rows.Count == 0 ||
+                !dt.Columns.Contains(colname) ||
+                dt.Rows[0][colname] == DBNull.Value)
             {
-                DataRow r = dt.Rows[0];
-                if (r[colname]!= null && r[colname] is int)
-                {
-                    value = (int)r[colname];
-                }
+                return 0;
             }
-            return value;
+            return Convert.ToInt32(dt.Rows[0][colname]);
         }
 
         public static string GetValueFromFirstRowAsString(DataTable dt, string colname)
         {
-            string value = "";
-            if (dt.Rows.Count > 0)
+            if (dt.Rows.Count == 0 ||
+                !dt.Columns.Contains(colname) ||
+                dt.Rows[0][colname] == DBNull.Value)
             {
-                DataRow r = dt.Rows[0];
-                if (r[colname] != null && r[colname] is string)
-                {
-                    value = (string)r[colname];
-                }
+                return "";
             }
-            return value;
+            return Convert.ToString(dt.Rows[0][colname]) ?? "";
         }
 
         public static bool TableChanges(DataTable dt)
         {
             bool b = false;
-            if(dt.GetChanges() != null)
+            if (dt.GetChanges() != null)
             {
                 b = true;
             }
