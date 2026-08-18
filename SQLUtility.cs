@@ -12,7 +12,7 @@ namespace CPUFramework
         public static void SetConnString(string connstring, bool tryopen, string userid = "", string password = "")
         {
             ConnectionString = connstring;
-            if (userid  != "")
+            if (userid != "")
             {
                 SqlConnectionStringBuilder b = new();
                 b.ConnectionString = ConnectionString;
@@ -20,7 +20,7 @@ namespace CPUFramework
                 b.Password = password;
                 ConnectionString = b.ConnectionString;
             }
-            if(tryopen)
+            if (tryopen)
             {
                 using (SqlConnection conn = new SqlConnection(ConnectionString))
                 {
